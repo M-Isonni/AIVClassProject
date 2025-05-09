@@ -105,12 +105,11 @@ bool AFPSReplicatedCharacter::ServerChangeHealth_Validate(int32 Delta)
 void AFPSReplicatedCharacter::ServerChangeHealth_Implementation(int32 Delta)
 {
 
-
-	if (HasAuthority())
-	{
-		Health = Health + Delta;
-		OnRep_HealthChanged();
-	}
+	Health = Health + Delta;
+	//if (HasAuthority())
+	//{
+	//	OnRep_HealthChanged();
+	//}
 
 	if (GetNetMode() == NM_ListenServer)
 	{
