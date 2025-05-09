@@ -68,13 +68,14 @@ void UFPSHUDWidget::UpdateMinimapIcons(const TArray<AActor*>& TrackedActors, UTe
 	}
 
 	MinimapCanvas->ClearChildren();
+	FVector2D MinimapSize = MinimapCanvas->GetCachedGeometry().GetLocalSize();
 
-	FVector2D PlayerIconPosition(150, 150); // top be set with the algorithm
+	FVector2D PlayerIconPosition(MinimapSize.X/2, MinimapSize.Y/2); // top be set with the algorithm
 
 	UImage* PlayerIcon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 	PlayerIcon->SetBrushFromTexture(IconTexture);
 
-	constexpr float PlayerIconSize = 16.0f;
+	constexpr double PlayerIconSize = 16.0f;
 
 	UCanvasPanelSlot* PlayerIconSlot = MinimapCanvas->AddChildToCanvas(PlayerIcon);
 	if (PlayerIconSlot)
@@ -84,14 +85,12 @@ void UFPSHUDWidget::UpdateMinimapIcons(const TArray<AActor*>& TrackedActors, UTe
 		PlayerIconSlot->SetAutoSize(false);
 	}
 
-
-	FVector2D MinimapSize = MinimapCanvas->GetCachedGeometry().GetLocalSize();
-
-	float OrthoWidth = MinimapActor->MinimapCaptureComponent->OrthoWidth;
-	float Scale = MinimapSize.X / OrthoWidth;
 	FVector CaptureCenter3D = MinimapActor->GetActorLocation();
-
-	constexpr float IconSize = 16.0f;
+	//FRotator CaptureRotation = MinimapActor->MinimapCaptureComponent->GetComponentRotation();
+	FRotator CaptureRotation = MinimapActor->GetActorRotation();
+	double OrthoWidth = MinimapActor->MinimapCaptureComponent->OrthoWidth;
+	FRotator CaptureYawOnly(0.0, CaptureRotation.Yaw, 0.0);
+	constexpr double IconSize = 16.0f;
 
 	for (AActor* Actor : TrackedActors)
 	{
@@ -100,20 +99,40 @@ void UFPSHUDWidget::UpdateMinimapIcons(const TArray<AActor*>& TrackedActors, UTe
 			continue;
 		}
 
-		//Calculate 2d position from 3d actor position 
-		//depending on image size and position (canvas size and position)
+		FVector ActorWorldPos = Actor->GetActorLocation();
+		FVector RelativeActorPos = ActorWorldPos - CaptureCenter3D;
+		FVector ActorLocationBasedOnPlayerYaw = CaptureYawOnly.UnrotateVector(RelativeActorPos);
 
-		FVector2D IconPosition(50,30); // top be set with the algorithm
+		// Normalize: Bring relative actor pos between -0.5 and 0.5
+		// Mind x and y axis inversion when porting to 2D dimension
+		double NormX = ActorLocationBasedOnPlayerYaw.Y / OrthoWidth;
+		double NormY = ActorLocationBasedOnPlayerYaw.X / OrthoWidth;
 
-		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-		Icon->SetBrushFromTexture(IconTexture);
+		// Bring normalized pos between 0 and 1. On Y axis let's invert them to keep y increasing from top to bottom
+		NormX = NormX + 0.5f;
+		NormY = 1.0f - (NormY + 0.5);
+		
+		//ensure the range is strictly between 0 and 1
+		NormX = FMath::Clamp(NormX, 0.0f, 1.0f);
+		NormY = FMath::Clamp(NormY, 0.0f, 1.0f);
 
-		UCanvasPanelSlot* IconSlot = MinimapCanvas->AddChildToCanvas(Icon);
-		if (IconSlot)
+		// Bring the normalized 0-1 pos into the range 0, minimapsize
+		FVector2D IconPosition(NormX * MinimapSize.X - IconSize/2, NormY * MinimapSize.Y - IconSize/2);
+		
+
+		if (IconPosition.X > 0 && IconPosition.X < MinimapSize.X && IconPosition.Y > 0 && IconPosition.Y < MinimapSize.Y)
 		{
-			IconSlot->SetPosition(IconPosition);
-			IconSlot->SetSize(FVector2D(IconSize, IconSize));
-			IconSlot->SetAutoSize(false);
+			// use the converted position to place the icon in the minimap
+			UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
+			Icon->SetBrushFromTexture(IconTexture);
+
+			UCanvasPanelSlot* IconSlot = MinimapCanvas->AddChildToCanvas(Icon);
+			if (IconSlot)
+			{
+				IconSlot->SetPosition(IconPosition);
+				IconSlot->SetSize(FVector2D(IconSize, IconSize));
+				IconSlot->SetAutoSize(false);
+			}
 		}
 	}
 }
