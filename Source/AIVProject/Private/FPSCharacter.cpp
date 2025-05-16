@@ -292,6 +292,7 @@ void AFPSCharacter::Shoot()
 							if (InterfaceInstance)
 							{
 								InterfaceInstance->TriggerHit(this);
+								UGameplayStatics::ApplyDamage(HitActor, 1.0, GetController(), this, UDamageType::StaticClass());
 								return;
 							}
 
@@ -299,6 +300,7 @@ void AFPSCharacter::Shoot()
 							if (HitActor && HitActor->Implements<UFPSInteractable>())
 							{
 								IFPSInteractable::Execute_TriggerBlueprintHit(HitActor, this);
+								UGameplayStatics::ApplyDamage(HitActor, 1.0, GetController(), this, UDamageType::StaticClass());
 							}
 						}
 					}
@@ -330,24 +332,26 @@ void AFPSCharacter::Shoot()
 
 					if (bHasHitSomething)
 					{
-						AActor* InteractedActor = Hit.GetActor();
-						if (InteractedActor)
+						AActor* HitActor = Hit.GetActor();
+						if (HitActor)
 						{
-							UE_LOG(LogTemp, Warning, TEXT("Shot: %s"), *InteractedActor->GetName());
+							UE_LOG(LogTemp, Warning, TEXT("Shot: %s"), *HitActor->GetName());
 
 							//check if actor has implemented interface
 							//call interface function
-							IFPSInteractable* InterfaceInstance = Cast<IFPSInteractable>(InteractedActor);
+							IFPSInteractable* InterfaceInstance = Cast<IFPSInteractable>(HitActor);
 							if (InterfaceInstance)
 							{
 								InterfaceInstance->TriggerHit(this);
+								UGameplayStatics::ApplyDamage(HitActor, 1.0, GetController(), this, UDamageType::StaticClass());
 							}
 
 							//Works only for BlueprintNative, BlueprintCallable or BlueprintImplementableEvent
-							if (InteractedActor && InteractedActor->Implements<UFPSInteractable>())
-							{
-								IFPSInteractable::Execute_TriggerBlueprintHit(InteractedActor, this);
-							}
+							//if (HitActor && HitActor->Implements<UFPSInteractable>())
+							//{
+							//	IFPSInteractable::Execute_TriggerBlueprintHit(HitActor, this);
+							//	UGameplayStatics::ApplyDamage(HitActor, 1.0, GetController(), this, UDamageType::StaticClass());
+							//}
 						}
 					}
 				}
