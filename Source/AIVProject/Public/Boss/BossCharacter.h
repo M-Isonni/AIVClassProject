@@ -39,6 +39,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
 	class UBehaviorTree* BehaviorTreeAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
+	float ArmorValue = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
+	float FireResistance = 0.25f;
+
 	UFUNCTION()
 	void SpawnReinforcements();
 

@@ -1,25 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Boss/BTTasks/BTTask_BossChargeAttack.h"
+#include "Boss/BTTasks/BTTask_BossRecharge.h"
 #include "Boss/BossCharacter.h"
 #include "Boss/Components/BossAttackComponent.h"
 #include "AIController.h"
 
-UBTTask_BossChargeAttack::UBTTask_BossChargeAttack()
+UBTTask_BossRecharge::UBTTask_BossRecharge()
 {
-	NodeName = TEXT("Boss Charge Attack");
+	NodeName = TEXT("Recharge Ammo");
 }
 
-EBTNodeResult::Type UBTTask_BossChargeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_BossRecharge::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (AAIController* AIController = OwnerComp.GetAIOwner())
 	{
 		if (ABossCharacter* Boss = Cast<ABossCharacter>(AIController->GetPawn()))
 		{
-			if (UBossAttackComponent* AttackComp = Boss->FindComponentByClass<UBossAttackComponent>())
+			if (UBossAttackComponent* AttackComp = Boss->GetComponentByClass<UBossAttackComponent>())
 			{
-				AttackComp->PerformCharge();
+				AttackComp->CurrentAmmo = AttackComp->MaxAmmo;
 				return EBTNodeResult::Succeeded;
 			}
 		}

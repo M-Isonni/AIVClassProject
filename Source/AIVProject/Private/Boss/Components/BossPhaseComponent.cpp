@@ -2,6 +2,8 @@
 
 
 #include "Boss/Components/BossPhaseComponent.h"
+#include "DamageTypes/FireDamage.h"
+#include "Boss/BossCharacter.h"
 
 // Sets default values for this component's properties
 UBossPhaseComponent::UBossPhaseComponent()
@@ -39,18 +41,68 @@ void UBossPhaseComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UBossPhaseComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DmgType, AController* InstigatedBy, AActor* Causer)
 {
-	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
-	const float HealthPercentage = CurrentHealth / MaxHealth;
+	const UFireDamage* FireDamage = Cast<UFireDamage>(DmgType);
 
-	if (HealthPercentage <= PhaseThreeThreshold && CurrentPhase < 3)
+	if (FireDamage)
 	{
-		CurrentPhase = 3;
-		OnPhaseThree.Broadcast();
+		float FinalDamage = Damage * FireDamage->DamageMultiplier;
+		if (!FireDamage->bIgnoresArmor)
+		{
+			if (AActor* Owner = GetOwner())
+			{
+				if (ABossCharacter* Boss = Cast<ABossCharacter>(Owner))
+				{
+					float DeltaDamage = FinalDamage * Boss->FireResistance;
+					FinalDamage -= DeltaDamage;
+				}
+			}
+		}
+
+		CurrentHealth = FMath::Clamp(CurrentHealth - FinalDamage, 0.0f, MaxHealth);
+		const float HealthPercentage = CurrentHealth / MaxHealth;
+
+		if (FireDamage->bIsDOT && FireDamage->AppliesStatusEffect != NAME_None)
+		{
+			float DPSDamage = FinalDamage / 20;
+			ApplyStatusEffect(FireDamage->AppliesStatusEffect, DPSDamage);
+		}
+
+		if (HealthPercentage <= PhaseThreeThreshold && CurrentPhase < 3)
+		{
+			CurrentPhase = 3;
+			OnPhaseThree.Broadcast();
+		}
+		else if (HealthPercentage <= PhaseTwoThreshold && CurrentPhase < 2)
+		{
+			CurrentPhase = 2;
+			OnPhaseTwo.Broadcast();
+		}
+
 	}
-	else if (HealthPercentage <= PhaseTwoThreshold && CurrentPhase < 2)
+	else
 	{
-		CurrentPhase = 2;
-		OnPhaseTwo.Broadcast();
+		CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
+		const float HealthPercentage = CurrentHealth / MaxHealth;
+
+		if (HealthPercentage <= PhaseThreeThreshold && CurrentPhase < 3)
+		{
+			CurrentPhase = 3;
+			OnPhaseThree.Broadcast();
+		}
+		else if (HealthPercentage <= PhaseTwoThreshold && CurrentPhase < 2)
+		{
+			CurrentPhase = 2;
+			OnPhaseTwo.Broadcast();
+		}
+	}
+}
+
+void UBossPhaseComponent::ApplyStatusEffect(FName Status, float DPSDamage)
+{
+	if (!Status.ToString().Compare("Burning"))
+	{
+		//Create a dot timer
+		//Once started reduce health by damage over time every second until timer expires
 	}
 }
 

@@ -3,19 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_BossChargeAttack.generated.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "BTTask_BossRecharge.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class AIVPROJECT_API UBTTask_BossChargeAttack : public UBTTaskNode
+class AIVPROJECT_API UBTTask_BossRecharge : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
 public:
-	UBTTask_BossChargeAttack();
+	UBTTask_BossRecharge();
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	

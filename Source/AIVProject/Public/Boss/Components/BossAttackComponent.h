@@ -33,6 +33,12 @@ public:
 	UPROPERTY(EditAnywhere, Category="Attack")
 	float ChargeSpeedMultiplier = 2.0f;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attack")
+	int32 CurrentAmmo;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attack")
+	int32 MaxAmmo = 10;
+
 	UFUNCTION(BlueprintCallable, Category="Attack")
 	void PerformMelee();
 

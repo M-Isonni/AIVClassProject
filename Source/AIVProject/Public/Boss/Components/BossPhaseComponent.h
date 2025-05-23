@@ -50,5 +50,7 @@ public:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DmgType, AController* InstigatedBy, AActor* Causer);
 
+	void ApplyStatusEffect(FName Status, float DPSDamage);
+
 		
 };
